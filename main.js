@@ -103,8 +103,7 @@ healthcheck(callback) {
     */
    if (error) {
     this.emitOffline();
-    log.error(`ServiceNow: Instance ${this.id} errored. ${error.message}`);
-    callback && return callback(null, error);    
+    log.error(`ServiceNow: Instance ${this.id} errored. ${error.message}`);    
    } else {
      /**
       * Write this block.
@@ -117,8 +116,10 @@ healthcheck(callback) {
       * responseData parameter.
       */
       this.emitOnline();
-      log.debug('ServiceNow: Instance ${this.id} health check successful');
-      callback && return callback(result, null);    
+      log.debug('ServiceNow: Instance ${this.id} health check successful');      
+   }
+   if (callback) {
+     return callback(result, error);
    }
  });
 }
