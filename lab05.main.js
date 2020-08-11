@@ -83,45 +83,21 @@ class ServiceNowAdapter extends EventEmitter {
     this.healthcheck();
   }
 
-/**
- * @memberof ServiceNowAdapter
- * @method healthcheck
- * @summary Check ServiceNow Health
- * @description Verifies external system is available and healthy.
- *   Calls method emitOnline if external system is available.
- *
- * @param {ServiceNowAdapter~requestCallback} [callback] - The optional callback
- *   that handles the response.
- */
-healthcheck(callback) {
- this.getRecord((result, error) => {
-   /**
-    * For this lab, complete the if else conditional
-    * statements that check if an error exists
-    * or the instance was hibernating. You must write
-    * the blocks for each branch.
-    */
-   if (error) {
-    this.emitOffline();
-    log.error(`ServiceNow: Instance ${this.id} errored. ${error.message}`);
-    callback && return callback(null, error);    
-   } else {
-     /**
-      * Write this block.
-      * If no runtime problems were detected, emit ONLINE.
-      * Log an appropriate message using IAP's global log object
-      * at a debug severity.
-      * If an optional IAP callback function was passed to
-      * healthcheck(), execute it passing this function's result
-      * parameter as an argument for the callback function's
-      * responseData parameter.
-      */
-      this.emitOnline();
-      log.debug('ServiceNow: Instance ${this.id} health check successful');
-      callback && return callback(result, null);    
-   }
- });
-}
+  /**
+   * @memberof ServiceNowAdapter
+   * @method healthcheck
+   * @summary Check ServiceNow Health
+   * @description Verifies external system is available and healthy.
+   *   Calls method emitOnline if external system is available.
+   *
+   * @param {ServiceNowAdapter~requestCallback} [callback] - The optional callback
+   *   that handles the response.
+   */
+  healthcheck(callback) {
+    // We will build this method in a later lab. For now, it will emulate
+    // a healthy integration by emmitting ONLINE.
+    this.emitOnline();
+  }
 
   /**
    * @memberof ServiceNowAdapter
