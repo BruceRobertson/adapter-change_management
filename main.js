@@ -1,3 +1,6 @@
+// Set globals
+/* global log */
+
 // Import built-in Node.js package path.
 const path = require('path');
 
@@ -14,7 +17,7 @@ const ServiceNowConnector = require(path.join(__dirname, '/connector.js'));
  * assign it to constant EventEmitter. We will create a child class
  * from this class.
  */
-const EventEmitter = require('events').EventEmitter;
+const { EventEmitter } = require('events');
 
 /**
  * The ServiceNowAdapter class.
@@ -25,7 +28,6 @@ const EventEmitter = require('events').EventEmitter;
  *   class.
  */
 class ServiceNowAdapter extends EventEmitter {
-
   /**
    * Here we document the ServiceNowAdapter class' callback. It must follow IAP's
    *   data-first convention.
@@ -84,32 +86,41 @@ class ServiceNowAdapter extends EventEmitter {
   }
 
   /**
- * @memberof ServiceNowAdapter
- * @method healthcheck
- * @summary Check ServiceNow Health
- * @description Verifies external system is available and healthy.
- *   Calls method emitOnline if external system is available.
- *
- * @param {ServiceNowAdapter~requestCallback} [callback] - The optional callback
- *   that handles the response.
- */
- healthcheck(callback) {
-    this.getRecord((result, error) => {
+   * @memberof ServiceNowAdapter
+   * @method healthcheck
+   * @summary Check ServiceNow Health
+   * @description Verifies external system is available and healthy.
+   *   Calls method emitOnline if external system is available.
+   *
+   * @param {ServiceNowAdapter~requestCallback} [callback] - The optional callback
+   *   that handles the response.
+   */
+  healthcheck(callback) {
+    try {
+      this.getRecord((result, error) => {
         if (error) {
-            this.emitOffline();
-            log.error(`ServiceNow: Instance ${this.id} errored. ${error.message}`);
-            if (callback) {
-                return callback(null, error);
-            }
+          this.emitOffline();
+          log.error(
+            `ServiceNow: Instance ${this.id} errored. ${error && error.message}`
+          );
+          if (callback) {
+            return callback(null, error);
+          }
         } else {
-            this.emitOnline();
-            log.debug(`ServiceNow: Instance ${this.id} health check successful`);
-            if (callback) {
-                return callback(result);
-            }
+          this.emitOnline();
+          log.debug(`ServiceNow: Instance ${this.id} health check successful`);
+          if (callback) {
+            return callback(result);
+          }
         }
-    });
-}
+      });
+    } catch (err) {
+      log.error(
+        `ServiceNow: Instance ${this.id} errored. ${err && err.message}`
+      );
+      return callback(null, err);
+    }
+  }
 
   /**
    * @memberof ServiceNowAdapter
@@ -158,39 +169,27 @@ class ServiceNowAdapter extends EventEmitter {
    *   handles the response.
    */
   getRecord(callback) {
-    const processElement = (v) => {
-        const {
-            number,
-            active,
-            priority,
-            description,
-            work_start,
-            work_end,
-            sys_id,
-        } = v;
-        return {
-            change_ticket_number: number,
-            active,
-            priority,
-            description,
-            work_start,
-            work_end,
-            change_ticket_key: sys_id
-        }
-    }
-    this.connector.get((results, error) => {
-        console.log(results);
+    try {
+      this.connector.get((response, error) => {
         if (error) {
-            return callback(null, error);
+          return callback(null, error);
         }
-        if (typeof results === 'object' && results.body)  {
-            const parsed = JSON.parse(results.body);
-            if (Array.isArray(parsed)) {                
-                return callback(null, parsed.map(processElement));
-            }
+        if (response && typeof response === 'object' && response.body) {
+          const parsedBody = JSON.parse(response.body);
+          if (parsedBody && Array.isArray(parsedBody.result)) {
+            return callback(
+              parsedBody.result.map(this.constructor.processChangeTicketRecord)
+            );
+          }
         }
-        callback(null, []);
-    });
+        return callback(null);
+      });
+    } catch (err) {
+      log.error(
+        `ServiceNow: Instance ${this.id} errored. ${err && err.message}`
+      );
+      return callback(null, err);
+    }
   }
 
   /**
@@ -203,7 +202,48 @@ class ServiceNowAdapter extends EventEmitter {
    *   handles the response.
    */
   postRecord(callback) {
-    this.connector.post(callback);
+    try {
+      this.connector.post((response, error) => {
+        if (error) {
+          return callback(null, error);
+        }
+        if (response && typeof response === 'object' && response.body) {
+          const parsedBody = JSON.parse(response.body);
+          return callback(
+            this.constructor.processChangeTicketRecord(parsedBody.result)
+          );
+        }
+        return callback({});
+      });
+    } catch (err) {
+      log.error(
+        `ServiceNow: Instance ${this.id} errored. ${err && err.message}`
+      );
+      return callback(null, err);
+    }
+  }
+
+  static processChangeTicketRecord(record) {
+    /* eslint-disable camelcase */
+    const {
+      number,
+      active,
+      priority,
+      description,
+      work_start,
+      work_end,
+      sys_id
+    } = record;
+    /* eslint-enable camelcase */
+    return {
+      change_ticket_number: number,
+      active,
+      priority,
+      description,
+      work_start,
+      work_end,
+      change_ticket_key: sys_id
+    };
   }
 }
 

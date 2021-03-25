@@ -1,0 +1,32 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true,
+        "node": true
+    },
+    "extends": [
+        "airbnb-base",
+        "plugin:prettier/recommended"
+    ],
+    "parserOptions": {
+        "sourceType": "module",
+        "ecmaVersion": 2019
+    },
+    "plugins": [
+        "json"
+    ],
+    "rules": {
+        "import/no-dynamic-require": "off",
+        "consistent-return": "off",
+        "max-len": [
+            "error",
+            {
+                "code": 100,
+                "ignoreComments": true,
+                "ignoreUrls": true,
+                "ignoreStrings": true,
+                "ignoreTemplateLiterals": true
+            }
+        ]
+    }
+}

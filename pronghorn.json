@@ -42,8 +42,8 @@
                 "name": "changeTicket",
                 "type": "object",
                 "description": "A change management ticket document.",
-                "schema": {                    
-                    "$ref": "changeRequest#/definitions/changeTicket"                    
+                "schema": {
+                    "$ref": "changeRequest#/definitions/changeTicket"
                 }
             },
             "roles": [
@@ -52,6 +52,6 @@
                 "operator"
             ],
             "task": true
-        }        
+        }
     ]
 }
